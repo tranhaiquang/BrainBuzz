@@ -1,20 +1,57 @@
-import { StatusBar } from 'expo-status-bar';
-import { StyleSheet, Text, View } from 'react-native';
+import React, { useEffect, useState } from 'react';
+import { NavigationContainer } from '@react-navigation/native';
+import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import AsyncStorage from '@react-native-async-storage/async-storage';
+import WelcomeScreen from './app/screens/WelcomeScreen';
+import HomeScreen from './app/screens/HomeScreen';
+import SignUpScreen from './app/screens/SignUpScreen';
+import LoginScreen from './app/screens/LoginScreen';
 
-export default function App() {
+const Stack = createNativeStackNavigator();
+
+const App = () => {
+  const [isSignedIn, setIsSignedIn] = useState(false);
+  const [loading, setLoading] = useState(true); // Add a loading state
+
+  useEffect(() => {
+    const checkSignInStatus = async () => {
+      try {
+        const token = await AsyncStorage.getItem('userToken');
+        console.log('Token:', token); // Log the token to verify
+        if (token) {
+          console.log('User is signed in');
+          setIsSignedIn(true);
+        } else {
+          console.log('User is not signed in');
+          setIsSignedIn(false);
+        }
+      } catch (error) {
+        console.error('Error checking sign-in status:', error);
+      } finally {
+        setLoading(false); // Set loading to false after the check
+      }
+    };
+
+    checkSignInStatus();
+  }, []);
+
+  useEffect(() => {
+  }, [isSignedIn]);
+
+  if (loading) {
+    return null; // Optionally, render a loading spinner or screen
+  }
+
   return (
-    <View style={styles.container}>
-      <Text>Open up App.tsx to start working on your app!</Text>
-      <StatusBar style="auto" />
-    </View>
+    <NavigationContainer>
+      <Stack.Navigator initialRouteName={isSignedIn ? 'Home' : 'WelcomeScreen'}>
+        <Stack.Screen name="WelcomeScreen" component={WelcomeScreen} options={{ headerShown: false }} />
+        <Stack.Screen name="Sign Up" component={SignUpScreen} />
+        <Stack.Screen name="Log In" component={LoginScreen} />
+        <Stack.Screen name="Home" component={HomeScreen} />
+      </Stack.Navigator>
+    </NavigationContainer>
   );
-}
+};
 
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: '#fff',
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-});
+export default App;
